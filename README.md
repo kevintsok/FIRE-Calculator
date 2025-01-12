@@ -32,7 +32,13 @@
 - 关键财务指标展示
 - 交互式财务预测图表
 - 详细的年度财务数据
-- 退休后存款覆盖多少年的生活
+- 利息覆盖分析报告
+
+## Quick Start
+
+```bash
+streamlit run financial_app.py  
+```
 
 ## 技术栈
 
