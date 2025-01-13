@@ -12,13 +12,12 @@ def calculate_finances(input_params=None):
             "interest_rate": 0.03,
             "annual_income_growth": 0.10,
             "annual_expense_growth": 0.03,
-            "start_year": 2025,
-            "retirement_year": 2035,
-            "end_year": 2060,
+            "start_age": 25,  # 开始工作年龄
+            "retirement_age": 40,  # 退休年龄
             "special_income_for_year": {
-                "2027": -1270000,
-                "2029": 260000,
-                "2042": 260000
+                "3": -1270000,  # 2027 - 出生年份
+                "5": 260000,  # 2029 - 出生年份
+                "18": 260000  # 2042 - 出生年份
             }
         }
     else:
@@ -34,8 +33,12 @@ def calculate_finances(input_params=None):
     annual_expense_growth = input_params["annual_expense_growth"]
     special_income_for_year = input_params["special_income_for_year"]
 
-    years = range(input_params["start_year"], input_params["end_year"])
-    retirement_year = input_params["retirement_year"]
+    # 将年龄转换为年份
+    birth_year = input_params.get("birth_year", 1995)
+    start_year = birth_year + input_params["start_age"]
+    retirement_year = birth_year + input_params["retirement_age"]
+    years = []
+    ages = []
     incomes = []
     expenses = []
     savings = []
@@ -44,15 +47,21 @@ def calculate_finances(input_params=None):
     # 添加标志来追踪储蓄耗尽状态
     savings_depleted = False
     last_positive_savings_year = None
-
-    for year in years:
-        if year > input_params["start_year"]:
-            if year < retirement_year:
+    retirement_age = input_params["retirement_age"]
+    
+    year = start_year
+    age = input_params["start_age"]
+    
+    while True:
+        years.append(year)
+        ages.append(age)
+        if age > input_params["start_age"]:
+            if age < retirement_age:
                 annual_income *= (1 + annual_income_growth)
             annual_expense *= (1 + annual_expense_growth)
 
-        current_special_income = special_income_for_year.get(str(year), 0)
-        if year >= retirement_year:
+        current_special_income = special_income_for_year.get(str(age), 0)
+        if age >= retirement_age:
             current_annual_income = current_special_income
         else:
             current_annual_income = annual_income + current_special_income
@@ -76,13 +85,16 @@ def calculate_finances(input_params=None):
             if not savings_depleted:
                 savings_depleted = True
                 last_positive_savings_year = year - 1
-            if year > retirement_year:
+            if age > retirement_age and total_savings <= 0:
                 break
+                
+        year += 1
+        age += 1
 
     # 创建结果DataFrame
-    actual_years = list(years)[:len(incomes)]
     result_df = pd.DataFrame({
-        'Year': actual_years,
+        'Year': years,
+        'Age': ages,
         'Annual Income': incomes,
         'Annual Expenses': expenses,
         'Total Savings': savings,
@@ -94,7 +106,7 @@ def calculate_finances(input_params=None):
 
     # 计算每年储蓄可以维持的年数
     yearly_coverage = []
-    for year_idx in range(len(actual_years)):
+    for year_idx in range(len(ages)):
         current_savings = savings[year_idx]
         current_expense = expenses[year_idx]
         current_interest = interests[year_idx]
@@ -130,9 +142,9 @@ def calculate_finances(input_params=None):
         ).to_dict(orient='records'),
         'coverage_analysis': yearly_coverage,
         'savings_depletion_year': last_positive_savings_year if savings_depleted else None,
-        'final_year': actual_years[-1],
-        'total_years_calculated': len(actual_years),
-        'retirement_savings': float(result_df[result_df['Year'] == retirement_year]['Total Savings'].iloc[0]) if retirement_year in result_df['Year'].values else 0,
+        'final_year': years[-1],
+        'total_years_calculated': len(ages),
+        'retirement_savings': float(result_df[result_df['Age'] == retirement_age]['Total Savings'].iloc[0]) if retirement_age in result_df['Age'].values else 0,
         'final_status': {
             'total_savings': float(result_df['Total Savings'].iloc[-1]),
             'annual_expense': float(result_df['Annual Expenses'].iloc[-1]),
@@ -159,10 +171,10 @@ def plot_financial_summary(financial_data):
     plt.figure(figsize=(14, 8))
 
     for column in ['Annual Income', 'Annual Expenses', 'Total Savings', 'Interest Earned']:
-        plt.plot(df['Year'], df[column], label=column, marker='o')
+        plt.plot(df['Age'], df[column], label=column, marker='o')
         
         # 为每个数据点添加标注
-        for x, y in zip(df['Year'], df[column]):
+        for x, y in zip(df['Age'], df[column]):
             plt.annotate(f'{y:,.0f}',
                         (x, y),
                         textcoords="offset points",
@@ -171,7 +183,7 @@ def plot_financial_summary(financial_data):
                         fontsize=8)
 
     plt.title('Financial Overview')
-    plt.xlabel('Year')
+    plt.xlabel('Age')
     plt.ylabel('Amount ($)')
     plt.legend()
     plt.grid(True)
@@ -242,4 +254,6 @@ if __name__ == "__main__":
     
     # 绘制图表
     plot_financial_summary(json.dumps(result['financial_data']))
-    
+
+
+# deepseek-chat

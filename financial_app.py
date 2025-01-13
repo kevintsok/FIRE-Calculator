@@ -4,12 +4,14 @@ from in_outcome import calculate_finances, plot_financial_summary
 import json
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="财务规划计算器", layout="wide")
+st.set_page_config(page_title="财务自由计算器", layout="wide")
 
 st.title("财务规划计算器 📊")
 
 # 创建两列布局
 col1, col2 = st.columns([1, 2])
+
+MAX_LIVING_AGE = 150
 
 with col1:
     st.subheader("输入参数")
@@ -38,7 +40,7 @@ with col1:
     interest_rate = st.slider("年利率 (%)", 
         min_value=0.0,
         max_value=30.0,
-        value=3.0,
+        value=2.5,
         step=0.1
     ) / 100
     
@@ -52,7 +54,7 @@ with col1:
     expense_growth = st.slider("支出年增长率 (%)",
         min_value=0.0,
         max_value=30.0,
-        value=3.0,
+        value=2.2,
         step=0.1
     ) / 100
     
@@ -62,24 +64,44 @@ with col1:
         value=1995
     )
     
-    start_year = st.number_input("开始年份",
-        min_value=1900,
-        max_value=2100,
-        value=2025
+    start_age = st.number_input("开始工作年龄",
+        min_value=0,
+        max_value=MAX_LIVING_AGE,
+        value=25
     )
     
-    end_year = st.number_input("终止年份",
-        min_value=start_year + 1,
-        max_value=2200,
-        value=birth_year + 100,
-        help="计算终止的年份"
+    retirement_age = st.number_input("退休年龄",
+        min_value=start_age + 1,
+        max_value=MAX_LIVING_AGE,
+        value=40
     )
-    
-    retirement_year = st.number_input("退休年份",
-        min_value=start_year + 1,
-        max_value=end_year,
-        value=2035
-    )
+
+    special_income_for_year = {}
+    # 特殊年份收入/支出输入
+    with st.expander("特殊年份收入/支出调整"):
+        st.write("为特定年份添加额外的收入或支出")
+        special_year = st.number_input("年份",
+            min_value=birth_year + start_age,
+            max_value=birth_year + MAX_LIVING_AGE,
+            value=birth_year + start_age
+        )
+        special_income = st.number_input("特殊年份收入",
+            min_value=0,
+            value=0,
+            step=10000,
+            format="%d"
+        )
+        special_expense = st.number_input("特殊年份支出",
+            min_value=0,
+            value=0,
+            step=10000,
+            format="%d"
+        )
+        if special_income != 0 or special_expense != 0:
+            special_income_for_year[special_year] = {
+                "income": special_income,
+                "expense": special_expense
+            }
 
 # 创建输入参数字典
 input_params = {
@@ -89,10 +111,10 @@ input_params = {
     "interest_rate": interest_rate,
     "annual_income_growth": income_growth,
     "annual_expense_growth": expense_growth,
-    "start_year": start_year,
-    "retirement_year": retirement_year,
-    "end_year": end_year,
-    "special_income_for_year": {}
+    "start_age": start_age,
+    "retirement_age": retirement_age,
+    "birth_year": birth_year,
+    "special_income_for_year": special_income_for_year
 }
 
 # 计算结果
@@ -106,8 +128,8 @@ with col2:
     st.subheader("关键指标")
     metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
     
-    # 找到退休年份对应的数据
-    retirement_data = df[df['Year'] == retirement_year]
+    # 找到退休年龄对应的数据
+    retirement_data = df[df['Age'] == retirement_age]
     if not retirement_data.empty:
         retirement_index = retirement_data.index[0]
         retirement_interest = df['Interest Earned'].iloc[retirement_index]
@@ -118,49 +140,54 @@ with col2:
 
     # 获取最后一年的数据
     last_year_data = df.iloc[-1]
-    last_year = last_year_data['Year']
+    last_age = last_year_data['Age']
     last_year_savings = last_year_data['Total Savings']
     last_year_interest = last_year_data['Interest Earned']
 
+    # 计算总和
+    total_income = df['Annual Income'].sum()
+    total_expense = df['Annual Expenses'].sum()
+    total_interest = df['Interest Earned'].sum()
+
     with metrics_col1:
         st.metric(
-            label="退休当年利息收入",
-            value=f"¥{retirement_interest:,.0f}"
+            label="总工资收入",
+            value=f"¥{total_income:,.0f}"
         )
     with metrics_col2:
+        st.metric(
+            label="总支出",
+            value=f"¥{total_expense:,.0f}"
+        )
+    with metrics_col3:
+        st.metric(
+            label="总利息收入",
+            value=f"¥{total_interest:,.0f}"
+        )
+    with metrics_col4:
         st.metric(
             label="退休当年总储蓄",
             value=f"¥{retirement_savings:,.0f}"
         )
-    with metrics_col3:
-        st.metric(
-            label="最后一年总储蓄",
-            value=f"¥{last_year_savings:,.0f}"
-        )
-    with metrics_col4:
-        st.metric(
-            label="最后一年利息收入",
-            value=f"¥{last_year_interest:,.0f}"
-        )
 
-    # 添加一个新的行来显示关键年份信息
+    # 添加一个新的行来显示关键年龄信息
     st.markdown("---")
-    year_col1, year_col2, year_col3 = st.columns(3)
+    age_col1, age_col2, age_col3 = st.columns(3)
     
-    with year_col1:
+    with age_col1:
         st.metric(
-            label="开始年份",
-            value=f"{start_year}年 ({start_year - birth_year}岁)"
+            label="开始工作年龄",
+            value=f"{start_age}岁({birth_year + start_age}年)"
         )
-    with year_col2:
+    with age_col2:
         st.metric(
-            label="退休年份",
-            value=f"{retirement_year}年 ({retirement_year - birth_year}岁)"
+            label="退休年龄",
+            value=f"{retirement_age}岁({birth_year + retirement_age}年)"
         )
-    with year_col3:
+    with age_col3:
         st.metric(
-            label="最后计算年份",
-            value=f"{last_year}年 ({last_year - birth_year}岁)"
+            label="终止年龄",
+            value=f"{last_age}岁({birth_year + last_age}年)"
         )
 
     st.subheader("财务预测图表")
@@ -168,36 +195,37 @@ with col2:
     # 使用Plotly创建交互式图表
     fig = go.Figure()
     
-    # 添加年龄列
-    df['Age'] = df['Year'].apply(lambda x: f"{x}年 ({x - birth_year}岁)")
-    
     # 添加每个数据系列
     fig.add_trace(go.Scatter(
         x=df['Age'],
         y=df['Annual Income'],
         name='当前年收入',
-        mode='lines+markers'
+        mode='lines+markers',
+        hovertemplate='年龄: %{x}岁<br>年收入: ¥%{y:,.0f}<extra></extra>'
     ))
     
     fig.add_trace(go.Scatter(
         x=df['Age'],
         y=df['Annual Expenses'],
         name='当前年支出',
-        mode='lines+markers'
+        mode='lines+markers',
+        hovertemplate='年龄: %{x}岁<br>年支出: ¥%{y:,.0f}<extra></extra>'
     ))
     
     fig.add_trace(go.Scatter(
         x=df['Age'],
         y=df['Total Savings'],
         name='总储蓄',
-        mode='lines+markers'
+        mode='lines+markers',
+        hovertemplate='年龄: %{x}岁<br>总储蓄: ¥%{y:,.0f}<extra></extra>'
     ))
     
     fig.add_trace(go.Scatter(
         x=df['Age'],
         y=df['Interest Earned'],
         name='利息收入',
-        mode='lines+markers'
+        mode='lines+markers',
+        hovertemplate='年龄: %{x}岁<br>利息收入: ¥%{y:,.0f}<extra></extra>'
     ))
     
     # 添加利息覆盖年数（使用次坐标轴）
@@ -207,13 +235,14 @@ with col2:
         name='利息覆盖年数',
         mode='lines+markers',
         yaxis='y2',
-        line=dict(color='#ff7f0e', dash='dot')
+        line=dict(color='#ff7f0e', dash='dot'),
+        hovertemplate='年龄: %{x}岁<br>覆盖年数: %{y:.1f}年<extra></extra>'
     ))
     
     # 更新图表布局
     fig.update_layout(
         title='财务概览',
-        xaxis_title='年份 (年龄)',
+        xaxis_title='年龄',
         yaxis_title='金额 (¥)',
         yaxis2=dict(
             title='覆盖年数',
@@ -301,4 +330,4 @@ with col2:
         elif coverage_ratio < 1.2:
             st.warning(f"⚠️ 利息收入接近支出水平，建议关注支出增长")
         else:
-            st.success(f"✅ 利息收入充足，可覆盖 {coverage_ratio:.1%} 的支出") 
+            st.success(f"✅ 利息收入充足，可覆盖 {coverage_ratio:.1%} 的支出")
