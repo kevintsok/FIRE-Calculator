@@ -1,5 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import json
 
 def calculate_finances(input_params=None):
@@ -60,7 +59,9 @@ def calculate_finances(input_params=None):
                 annual_income *= (1 + annual_income_growth)
             annual_expense *= (1 + annual_expense_growth)
 
-        current_special_income = special_income_for_year.get(str(age), 0)
+        current_special_income = special_income_for_year.get(year, 0)
+        if isinstance(current_special_income, dict):
+            current_special_income = current_special_income["income"] - current_special_income["expense"]
         if age >= retirement_age:
             current_annual_income = current_special_income
         else:
@@ -162,6 +163,7 @@ def plot_financial_summary(financial_data):
     Args:
         financial_data: JSON字符串或DataFrame
     """
+    import matplotlib.pyplot as plt
     # 如果输入是JSON字符串，转换为DataFrame
     if isinstance(financial_data, str):
         df = pd.read_json(financial_data)
@@ -189,34 +191,47 @@ def plot_financial_summary(financial_data):
     plt.grid(True)
     plt.tight_layout()
 
-def calculate_interest_coverage_years(financial_data):
+def calculate_interest_coverage_years(financial_data, retirement_age=None):
     """
     计算当前利息收入可以支付多少年的未来支出
     
     Args:
         financial_data: JSON字符串或DataFrame格式的财务数据
+        retirement_age: int, 退休年龄
     
     Returns:
         coverage_years: float, 利息收入可以支付的年数
         yearly_coverage_details: list, 每年的覆盖详情
     """
+    # 如果输入是JSON字符串，转换为DataFrame
     if isinstance(financial_data, str):
         df = pd.read_json(financial_data)
+    elif isinstance(financial_data, list):
+        df = pd.DataFrame(financial_data)
     else:
         df = financial_data
     
-    # 获取最后一年的利息收入和支出
-    last_year_interest = df['Interest Earned'].iloc[-1]
-    last_year_expense = df['Annual Expenses'].iloc[-1]
+    # 获取退休当年的利息收入和支出
+    if retirement_age is not None:
+        retirement_data = df[df['Age'] == retirement_age]
+        if not retirement_data.empty:
+            target_interest = retirement_data['Interest Earned'].iloc[0]
+            target_expense = retirement_data['Annual Expenses'].iloc[0]
+        else:
+            target_interest = df['Interest Earned'].iloc[-1]
+            target_expense = df['Annual Expenses'].iloc[-1]
+    else:
+        target_interest = df['Interest Earned'].iloc[-1]
+        target_expense = df['Annual Expenses'].iloc[-1]
     
     # 获取年支出增长率
     expense_growth = df['Annual Expenses'].iloc[-1] / df['Annual Expenses'].iloc[-2] - 1
     
     # 计算未来每年的支出和利息覆盖情况
     coverage_years = 0
-    remaining_interest = last_year_interest
+    remaining_interest = target_interest
     yearly_coverage_details = []
-    future_expense = last_year_expense
+    future_expense = target_expense
     
     while remaining_interest > 0:
         future_expense *= (1 + expense_growth)
