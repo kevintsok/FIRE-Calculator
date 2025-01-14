@@ -1,0 +1,74 @@
+<view class="container">
+  <!-- 输入区域 -->
+  <view class="input-section">
+    <view class="input-group">
+      <text class="label">当前存款</text>
+      <input type="number" placeholder="请输入当前存款" bindinput="bindCurrentSavings"/>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">年收入</text>
+      <input type="number" placeholder="请输入年收入" bindinput="bindAnnualIncome"/>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">年支出</text>
+      <input type="number" placeholder="请输入年支出" bindinput="bindAnnualExpense"/>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">年利率 (%)</text>
+      <slider min="0" max="30" step="0.1" value="2.5" bindchange="bindInterestRate"/>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">收入年增长率 (%)</text>
+      <slider min="0" max="30" step="0.1" value="10" bindchange="bindIncomeGrowth"/>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">支出年增长率 (%)</text>
+      <slider min="0" max="30" step="0.1" value="2.2" bindchange="bindExpenseGrowth"/>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">出生年份</text>
+      <picker mode="date" fields="year" bindchange="bindBirthYear">
+        <view class="picker">{{birthYear}}年</view>
+      </picker>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">开始工作年龄</text>
+      <picker mode="selector" range="{{ageRange}}" bindchange="bindStartAge">
+        <view class="picker">{{startAge}}岁</view>
+      </picker>
+    </view>
+    
+    <view class="input-group">
+      <text class="label">退休年龄</text>
+      <picker mode="selector" range="{{ageRange}}" bindchange="bindRetirementAge">
+        <view class="picker">{{retirementAge}}岁</view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 特殊年份调整 -->
+  <view class="special-years">
+    <view class="title">特殊年份调整</view>
+    <view class="add-btn" bindtap="addSpecialYear">+ 添加特殊年份</view>
+    <block wx:for="{{specialYears}}" wx:key="year">
+      <view class="special-year-item">
+        <picker mode="date" fields="year" bindchange="bindSpecialYear">
+          <view class="picker">{{item.year}}年</view>
+        </picker>
+        <input type="number" placeholder="特殊收入" value="{{item.income}}" bindinput="bindSpecialIncome"/>
+        <input type="number" placeholder="特殊支出" value="{{item.expense}}" bindinput="bindSpecialExpense"/>
+        <view class="delete-btn" bindtap="deleteSpecialYear" data-index="{{index}}">删除</view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 计算按钮 -->
+  <button class="calculate-btn" bindtap="calculate">开始计算</button>
+</view>

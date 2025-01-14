@@ -1,5 +1,9 @@
 # 提前退休(FIRE)计算器 📊
 
+## 示例页面展示
+
+![FIRE Calculator Web Page](docs/FIRE_web.png)
+
 一个基于 Streamlit 开发的交互式财务规划工具，帮助用户进行长期财务规划和退休计划分析。
 
 ## 功能特点
