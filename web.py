@@ -11,13 +11,12 @@ st.title("财务自由计算器 📊")
 # 创建左右分割布局
 col1, col2 = st.columns([1, 2])
 
-MAX_LIVING_AGE = 150
+MAX_LIVING_AGE = 100
 
 with col1:
     st.subheader("输入参数")
     
     current_savings = st.number_input("当前存款", 
-        min_value=0, 
         value=0, 
         step=10000,
         format="%d"
@@ -25,19 +24,19 @@ with col1:
     
     annual_income = st.number_input("年收入", 
         min_value=0, 
-        value=500000, 
+        value=300000, 
         step=10000,
         format="%d"
     )
     
     annual_expense = st.number_input("年支出",
         min_value=0,
-        value=200000,
+        value=150000,
         step=10000,
         format="%d"
     )
     
-    interest_rate = st.slider("年利率 (%)", 
+    interest_rate = st.slider("年投资回报率 (%)", 
         min_value=0.0,
         max_value=30.0,
         value=2.5,
@@ -60,8 +59,8 @@ with col1:
     
     birth_year = st.number_input("出生年份",
         min_value=1900,
-        max_value=2024,
-        value=1995
+        max_value=2025,
+        value=2000
     )
     
     start_age = st.number_input("开始工作年龄",
