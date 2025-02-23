@@ -224,10 +224,16 @@ with col2:
             value=f"{retirement_age}岁({birth_year + retirement_age}年)"
         )
     with age_col3:
-        st.metric(
-            label="破产年龄",
-            value=f"{last_age}岁({birth_year + last_age}年)"
-        )
+        if last_age >= MAX_LIVING_AGE:
+            st.metric(
+                label=f"{MAX_LIVING_AGE}岁时的储蓄",
+                value=f"¥{last_year_savings:,.0f}"
+            )
+        else:
+            st.metric(
+                label="破产年龄",
+                value=f"{last_age}岁({birth_year + last_age}年)"
+            )
 
     st.subheader("财务预测图表")
     

@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 
+MAX_LIVING_AGE = 100
 def calculate_finances(input_params=None):
     # 如果没有提供输入参数，使用默认值
     if input_params is None:
@@ -9,14 +10,14 @@ def calculate_finances(input_params=None):
             "annual_income": 700000,
             "annual_expense": 280000,
             "interest_rate": 0.03,
-            "annual_income_growth": 0.10,
+            "annual_income_growth": 0.50,
             "annual_expense_growth": 0.03,
             "start_age": 25,  # 开始工作年龄
             "retirement_age": 40,  # 退休年龄
             "special_income_for_year": {
-                "3": -1270000,  # 2027 - 出生年份
-                "5": 260000,  # 2029 - 出生年份
-                "18": 260000  # 2042 - 出生年份
+                "2027": -1270000,  # 2027 - 出生年份
+                "2029": 260000,  # 2029 - 出生年份
+                "2042": 260000  # 2042 - 出生年份
             }
         }
     else:
@@ -52,6 +53,8 @@ def calculate_finances(input_params=None):
     age = input_params["start_age"]
     
     while True:
+        if age > MAX_LIVING_AGE:
+            break
         years.append(year)
         ages.append(age)
         if age > input_params["start_age"]:
@@ -78,7 +81,7 @@ def calculate_finances(input_params=None):
         # 记录数据
         incomes.append(current_annual_income)
         expenses.append(annual_expense)
-        savings.append(max(0, total_savings))
+        savings.append(total_savings)
         interests.append(interest_from_savings)
 
         # 检查储蓄是否耗尽
