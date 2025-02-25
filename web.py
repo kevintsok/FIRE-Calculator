@@ -156,12 +156,12 @@ coverage_analysis = result['coverage_analysis']
 with col2:
     st.subheader("关键指标")
     with st.container():
-        metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
+        age_col1, age_col2, age_col3, age_col4 = st.columns(4)
 
     # 添加一个新的行来显示关键年龄信息
     st.markdown("---")
     with st.container():
-        age_col1, age_col2, age_col3, age_col4 = st.columns(4)
+        metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
     
     # 找到退休年龄对应的数据
     retirement_data = df[df['Age'] == retirement_age]
@@ -199,11 +199,6 @@ with col2:
             label="总利息收入",
             value=f"¥{total_interest:,.0f}"
         )
-    with metrics_col4:
-        st.metric(
-            label="退休当年总储蓄",
-            value=f"¥{retirement_savings:,.0f}"
-        )
 
     # 使用外部定义的age_cols显示关键年龄信息
     with age_col1:
@@ -216,7 +211,14 @@ with col2:
             label="退休年龄",
             value=f"{retirement_age}岁({birth_year + retirement_age}年)"
         )
+    
     with age_col3:
+        st.metric(
+            label="退休当年总储蓄",
+            value=f"¥{retirement_savings:,.0f}"
+        )
+        
+    with age_col4:
         if last_age >= MAX_LIVING_AGE:
             st.metric(
                 label=f"{MAX_LIVING_AGE}岁时的储蓄",
@@ -228,7 +230,7 @@ with col2:
                 value=f"{last_age}岁({birth_year + last_age}年)"
             )
     
-    with age_col4:
+    with metrics_col4:
         #blue, green, orange, red, violet.
         if last_age > retirement_age + 1:
             if last_age >= MAX_LIVING_AGE:
