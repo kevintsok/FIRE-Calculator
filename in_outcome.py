@@ -64,7 +64,7 @@ def calculate_finances(input_params=None):
 
         current_special_income = special_income_for_year.get(year, 0)
         if isinstance(current_special_income, dict):
-            current_special_income = current_special_income["income"] - current_special_income["expense"]
+            current_special_income = current_special_income["income"]
         if age >= retirement_age:
             current_annual_income = current_special_income
         else:

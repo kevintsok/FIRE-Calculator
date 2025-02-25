@@ -4,9 +4,9 @@ from in_outcome import calculate_finances, plot_financial_summary, calculate_int
 import json
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="财务自由计算器", layout="wide")
+st.set_page_config(page_title="提前退休计算器", layout="wide")
 
-st.title("财务自由计算器 📊")
+st.title("提前退休计算器 📊")
 
 # 创建左右分割布局
 col1, col2 = st.columns([1, 2])
@@ -16,18 +16,20 @@ MAX_LIVING_AGE = 100
 with col1:
     st.subheader("输入参数")
     
-    current_savings = st.number_input("当前存款", 
-        value=0, 
-        step=10000,
-        format="%d"
-    )
-    
     annual_income = st.number_input("年收入", 
         min_value=0, 
         value=300000, 
         step=10000,
         format="%d"
     )
+    
+    income_growth = st.slider("收入年增长率 (%)",
+        min_value=0.0,
+        max_value=30.0,
+        value=10.0,
+        step=0.1,
+        help="工资的年增长率，作用在每年的收入上"
+    ) / 100
     
     annual_expense = st.number_input("年支出",
         min_value=0,
@@ -36,25 +38,27 @@ with col1:
         format="%d"
     )
     
-    interest_rate = st.slider("年投资回报率 (%)", 
-        min_value=0.0,
-        max_value=30.0,
-        value=2.5,
-        step=0.1
-    ) / 100
-    
-    income_growth = st.slider("收入年增长率 (%)",
-        min_value=0.0,
-        max_value=30.0,
-        value=10.0,
-        step=0.1
-    ) / 100
-    
     expense_growth = st.slider("支出年增长率 (%)",
         min_value=0.0,
         max_value=30.0,
         value=2.2,
-        step=0.1
+        step=0.1,
+        help="通胀，或因结婚生子或消费升级等因素增加的支出，作用在年支出上"
+    ) / 100
+    
+    current_savings = st.number_input("存款", 
+        value=0, 
+        step=10000,
+        format="%d",
+        help="在开始工作前，有多少存款"
+    )
+    
+    interest_rate = st.slider("投资年回报率 (%)", 
+        min_value=0.0,
+        max_value=30.0,
+        value=2.5,
+        step=0.1,
+        help="利息或者其他投资的年利率，作用在存款上"
     ) / 100
     
     birth_year = st.number_input("出生年份",
@@ -89,29 +93,21 @@ with col1:
             value=birth_year + start_age,
             key="new_special_year"
         )
-        new_income = st.number_input("特殊年份收入",
-            min_value=0,
+        new_income = st.number_input("特殊年份收入或支出",
             value=0,
             step=10000,
             format="%d",
-            key="new_special_income"
-        )
-        new_expense = st.number_input("特殊年份支出",
-            min_value=0,
-            value=0,
-            step=10000,
-            format="%d",
-            key="new_special_expense"
+            key="new_special_income",
+            help="收入填入正数，支出填入负数"
         )
         
         if st.button("添加特殊年份"):
-            if new_income != 0 or new_expense != 0:
+            if new_income != 0:
                 st.session_state.special_years.append({
                     "year": new_year,
-                    "income": new_income,
-                    "expense": new_expense
+                    "income": new_income
                 })
-                st.success(f"已添加{new_year}年特殊收入/支出")
+                st.success(f"已添加{new_year}年特殊收入或支出")
             else:
                 st.warning("请输入至少一项收入或支出")
 
@@ -123,9 +119,7 @@ with col1:
                 with cols[0]:
                     st.write(f"年份：{item['year']}")
                 with cols[1]:
-                    st.write(f"收入：¥{item['income']:,}")
-                with cols[2]:
-                    st.write(f"支出：¥{item['expense']:,}")
+                    st.write(f"收支：¥{item['income']:,}")
                 with cols[3]:
                     if st.button("删除", key=f"del_{i}"):
                         del st.session_state.special_years[i]
@@ -135,7 +129,6 @@ with col1:
     special_income_for_year = {
         item["year"]: {
             "income": item["income"],
-            "expense": item["expense"]
         }
         for item in st.session_state.special_years
     }
