@@ -161,7 +161,7 @@ with col2:
     # 添加一个新的行来显示关键年龄信息
     st.markdown("---")
     with st.container():
-        age_col1, age_col2, age_col3 = st.columns(3)
+        age_col1, age_col2, age_col3, age_col4 = st.columns(4)
     
     # 找到退休年龄对应的数据
     retirement_data = df[df['Age'] == retirement_age]
@@ -227,6 +227,20 @@ with col2:
                 label="破产年龄",
                 value=f"{last_age}岁({birth_year + last_age}年)"
             )
+    
+    with age_col4:
+        #blue, green, orange, red, violet.
+        if last_age > retirement_age + 1:
+            if last_age >= MAX_LIVING_AGE:
+                st.markdown("<h1 style='text-align: left; color: green;'>财富自由</h1>", unsafe_allow_html=True)
+            elif last_age >= 80:
+                st.markdown("<h1 style='text-align: left; color: orange;'>安享晚年</h1>", unsafe_allow_html=True)
+            elif last_age >= 60:
+                st.markdown("<h1 style='text-align: left; color: read;'>注意风险</h1>", unsafe_allow_html=True)
+            else:
+                st.markdown("<h1 style='text-align: left; color: blue;'>晚景凄凉</h1>", unsafe_allow_html=True)
+        else:
+            st.markdown("<h1 style='text-align: left; color: violet;'>朝不保夕</h1>", unsafe_allow_html=True)
 
     st.subheader("财务预测图表")
     
