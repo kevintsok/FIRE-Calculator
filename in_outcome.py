@@ -29,6 +29,7 @@ def calculate_finances(input_params=None):
     annual_expense = input_params["annual_expense"]
     total_savings = input_params["current_savings"]
     interest_rate = input_params["interest_rate"]
+    loan_interest_rate = input_params["loan_interest_rate"]
     annual_income_growth = input_params["annual_income_growth"]
     annual_expense_growth = input_params["annual_expense_growth"]
     special_income_for_year = input_params["special_income_for_year"]
@@ -57,30 +58,39 @@ def calculate_finances(input_params=None):
             break
         years.append(year)
         ages.append(age)
+        
+        current_special_dict = special_income_for_year.get(year, 0)
+        if isinstance(current_special_dict, dict):
+            current_special_income_or_expense = current_special_dict["income"]
+            assert isinstance(current_special_dict["income"], (int, float))
+            if current_special_income_or_expense > 0:
+                current_special_income = current_special_income_or_expense
+            else:
+                current_special_expense = -current_special_income_or_expense
+        else:
+            current_special_income, current_special_expense = 0,0
+        
         if age > input_params["start_age"]:
             if age < retirement_age:
                 annual_income *= (1 + annual_income_growth)
             annual_expense *= (1 + annual_expense_growth)
 
-        current_special_income = special_income_for_year.get(year, 0)
-        if isinstance(current_special_income, dict):
-            current_special_income = current_special_income["income"]
         if age >= retirement_age:
             current_annual_income = current_special_income
         else:
             current_annual_income = annual_income + current_special_income
 
         # 计算利息收入
-        interest_from_savings = max(0, total_savings * interest_rate)
+        interest_from_savings = max(0, total_savings * interest_rate) + min(0, total_savings * loan_interest_rate)
         total_income = current_annual_income + interest_from_savings
         
         # 计算年度储蓄变化
-        annual_savings = total_income - annual_expense
+        annual_savings = total_income - annual_expense - current_special_expense
         total_savings += annual_savings
 
         # 记录数据
         incomes.append(current_annual_income)
-        expenses.append(annual_expense)
+        expenses.append(annual_expense + current_special_expense)
         savings.append(total_savings)
         interests.append(interest_from_savings)
 

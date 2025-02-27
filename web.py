@@ -53,6 +53,17 @@ with col1:
         help="在开始工作前，有多少存款"
     )
     
+    if current_savings < 0:
+        loan_interest_rate = st.slider("贷款年利率 (%)", 
+            min_value=0.0,
+            max_value=30.0,
+            value=3.0,
+            step=0.1,
+            help="贷款的年利率"
+        ) / 100
+    else:
+        loan_interest_rate = 4.0/100  # 如果存款不是负数，贷款利率设为0
+    
     interest_rate = st.slider("投资年回报率 (%)", 
         min_value=0.0,
         max_value=30.0,
@@ -61,6 +72,7 @@ with col1:
         help="利息或者其他投资的年利率，作用在存款上"
     ) / 100
     
+    st.write("")
     birth_year = st.number_input("出生年份",
         min_value=1900,
         max_value=2025,
@@ -139,6 +151,7 @@ input_params = {
     "annual_income": annual_income,
     "annual_expense": annual_expense,
     "interest_rate": interest_rate,
+    "loan_interest_rate": loan_interest_rate,  # 添加贷款利率到输入参数
     "annual_income_growth": income_growth,
     "annual_expense_growth": expense_growth,
     "start_age": start_age,
@@ -325,34 +338,37 @@ with col2:
     with col_financial:
         st.subheader("财务数据明细")
         df_display = df.copy()
-        df_display = df_display.drop('Year', axis=1)
+        # 新增一列显示Age + birth_year
+        df_display['Year'] = df_display['Age'] + birth_year
         
         # 调整列的顺序和显示名称
         columns_order = [
+            'Year',
             'Age', 
             'Annual Income', 
             'Annual Expenses', 
             'Total Savings', 
             'Interest Earned',
             'Net Cash Flow',
-            'Interest Coverage Ratio',
             'Coverage_Years'
         ]
-        
+        #            'Interest Coverage Ratio',
+
         column_names = {
+            'Year': '年份',
             'Age': '年龄',
             'Annual Income': '年收入',
             'Annual Expenses': '年支出',
             'Total Savings': '总储蓄',
             'Interest Earned': '利息收入',
             'Net Cash Flow': '净现金流',
-            'Interest Coverage Ratio': '利息覆盖率',
             'Coverage_Years': '储蓄覆盖年数'
         }
+        # 'Interest Coverage Ratio': '利息覆盖率',
+        
         
         df_display = df_display[columns_order]
         df_display.columns = [column_names[col] for col in columns_order]
-        
         st.dataframe(
             df_display.style.format({
                 '年收入': '{:,.0f}',
@@ -360,7 +376,6 @@ with col2:
                 '总储蓄': '{:,.0f}',
                 '利息收入': '{:,.0f}',
                 '净现金流': '{:,.0f}',
-                '利息覆盖率': '{:.1%}',
                 '储蓄覆盖年数': '{:.1f}'
             }).background_gradient(
                 subset=['总储蓄', '利息收入', '净现金流'],
@@ -368,6 +383,8 @@ with col2:
             ),
             use_container_width=True
         )
+        
+         # '利息覆盖率': '{:.1%}',
 
     with col_coverage:
         st.subheader("利息覆盖分析")
